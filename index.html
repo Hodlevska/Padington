@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Paddington Animation</title>
+    <title>AR Paddington Stable Animation</title>
     
     <!-- Підключаємо A-Frame та MindAR -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -18,11 +18,11 @@
 </head>
 <body>
 
-    <!-- AR Сцена з фільтрами згладжування (filterMinCF та filterBeta), щоб модель не тряслась -->
+    <!-- AR Сцена з чистим швидким трекінгом -->
     <a-scene 
-        mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.0001; filterBeta: 0.001;" 
+        mindar-image="imageTargetSrc: ./targets.mind;" 
         color-space="sRGB" 
-        renderer="colorManagement: true, physicallyCorrectLights: true" 
+        renderer="colorManagement: true, precision: mediump, antialias: true" 
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: true">
         
@@ -34,15 +34,16 @@
         <!-- Налаштування камери -->
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- Сутність, що з'являється при розпізнаванні твого маркера -->
-        <a-entity mindar-image-target="targetIndex: 0">
-            <!-- Сама модель із примусовим запуском анімації та твоїм масштабом -->
+        <!-- Сутність маркера зі згладжуванням (smooth), що прибирає дрижання моделі -->
+        <a-entity mindar-image-target="targetIndex: 0" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="5">
+            <!-- Сама модель Падінгтона з оптимізованими тінями та анімацією -->
             <a-gltf-model 
                 src="#paddingtonModel" 
                 position="0 -0.1 0" 
                 rotation="0 0 0" 
-                scale="0.48 0.48 0.48"
-                animation-mixer="clip: *;">
+                scale="0.49 0.49 0.49"
+                animation-mixer="clip: *;"
+                shadow="cast: false; receive: false">
             </a-gltf-model>
         </a-entity>
 
