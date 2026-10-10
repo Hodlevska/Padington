@@ -17,34 +17,29 @@
     </style>
 </head>
 <body>
-<h1>Ntrcn</h1>
-    <!-- AR Сцена: прив'язуємо твій скомпільований маркер (.mind) -->
-    <mindar-image-target mindar-image="imageTargetSrc: ./targets.mind;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: true">
+
+    <!-- Сцена з прив'язкою до твого файлу targets.mind -->
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: true" embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true">
         
-        <a-scene embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-            
-            <!-- Завантажуємо твою 3D-модель (заміни шлях на назву свого файлу) -->
-            <a-assets>
-                <a-asset-item id="paddingtonModel" src="./paddington.glb"></a-asset-item>
-            </a-assets>
+        <a-assets>
+            <!-- Підключаємо твою модель paddington.glb -->
+            <a-asset-item id="paddingtonModel" src="./paddington.glb"></a-asset-item>
+        </a-assets>
 
-            <!-- Налаштування камери -->
-            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-            <!-- Поведінка при розпізнаванні маркера -->
-            <a-entity mindar-image-target="targetIndex: 0">
-                <!-- Сама модель Падінгтона: position, rotation, scale (можеш підкрутити цифри під свої розміри) -->
-                <a-gltf-model 
-                    src="#paddingtonModel" 
-                    position="0 -0.2 0" 
-                    rotation="0 0 0" 
-                    scale="0.8 0.8 0.8"
-                    animation-mixer>
-                </a-gltf-model>
-            </a-entity>
+        <!-- Сутність маркера -->
+        <a-entity mindar-image-target="targetIndex: 0">
+            <a-gltf-model 
+                src="#paddingtonModel" 
+                position="0 -0.2 0" 
+                rotation="0 0 0" 
+                scale="0.8 0.8 0.8"
+                animation-mixer>
+            </a-gltf-model>
+        </a-entity>
 
-        </a-scene>
-    </mindar-image-target>
+    </a-scene>
 
 </body>
 </html>
