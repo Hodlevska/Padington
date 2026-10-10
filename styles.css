@@ -1,0 +1,47 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    height: 200vh; /* Робимо сторінку вищою для скролу */
+}
+
+/* Відео на весь екран */
+.bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover; /* Запобігає сплющенню та обрізанню */
+    z-index: -1; /* Щоб відео було позаду всього контенту */
+}
+
+/* Блок із текстом-маркером */
+.marker-box {
+    position: relative;
+    margin-top: 60vh; /* Опускаємо нижче, щоб доскролити до нього */
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%;
+    max-width: 600px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    text-align: center;
+    border-radius: 10px;
+    
+    /* Початковий стан: схований */
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+/* Клас, який додаватиметься через JS, коли Падінгтон/блок з'явиться на екрані */
+.marker-box.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
