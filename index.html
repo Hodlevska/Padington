@@ -8,6 +8,8 @@
     <!-- Підключаємо A-Frame та MindAR -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <!-- Додаємо офіційний плагін анімації для glTF -->
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
     <style>
         body {
@@ -28,7 +30,7 @@
         
         <!-- Завантажуємо 3D-модель у кеш -->
         <a-assets>
-            <a-asset-item id="paddingtonModel" src="./paddington.glb"></a-asset-item>
+            <a-asset-item id="paddingtonModel" src="./animatedbear.glb"></a-asset-item>
         </a-assets>
 
         <!-- Налаштування камери -->
@@ -36,13 +38,13 @@
 
         <!-- Сутність маркера зі згладжуванням (smooth), що прибирає дрижання моделі -->
         <a-entity mindar-image-target="targetIndex: 0" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="5">
-            <!-- Сама модель Падінгтона з оптимізованими тінями та анімацією -->
+            <!-- Сама модель Падінгтона з анімацією -->
             <a-gltf-model 
                 src="#paddingtonModel" 
-                position="0 -0.1 0" 
+                position="0 -0.5 0" 
                 rotation="0 0 0" 
                 scale="0.49 0.49 0.49"
-                animation-mixer="clip: *;"
+                animation-mixer
                 shadow="cast: false; receive: false">
             </a-gltf-model>
         </a-entity>
