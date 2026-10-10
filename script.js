@@ -1,19 +1,9 @@
-// Використовуємо Intersection Observer, щоб відстежувати появу елемента на екрані
-const markerBox = document.getElementById("paddington-marker");
+// Знаходимо нашу 3D-модельку
+const modelViewer = document.getElementById("my-model");
 
-const observer = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-        // Якщо елемент з'явився в зоні видимості
-        if (entry.isIntersecting) {
-            markerBox.classList.add("visible"); // Вилазить текст поверх відео
-            console.log("Падінгтон спіймано! Маркер спрацював ахуєнно!");
-        } else {
-            // Можеш прибирати клас, якщо треба щоб зникало назад при скролі
-            markerBox.classList.remove("visible");
-        }
-    });
-}, {
-    threshold: 0.3 // Спрацьовує, коли видно хоча б 30% блоку
-});
-
-observer.observe(markerBox);
+// Для прикладу зробимо так, щоб вона з'являлася через 1 секунду після завантаження сторінки
+// (або сюди ти можеш втулити свій Intersection Observer / маркер, який ми робили минулого разу)
+setTimeout(() => {
+    modelViewer.classList.add("visible");
+    console.log("3D-моделька вилізла поверх картини ахуєнно!");
+}, 1000);

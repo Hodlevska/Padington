@@ -1,16 +1,52 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Paddington Animation</title>
+    
+    <!-- Підключаємо A-Frame та MindAR -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  </head>
-  <body>
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: true">
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-plane color="blue" opac="0.5" position="0 0 0" height="0.5" width="0.5"></a-plane>
-      </a-entity>
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- AR Сцена з прив'язкою до твого файлу targets.mind -->
+    <a-scene 
+        mindar-image="imageTargetSrc: ./targets.mind;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights: true" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: true">
+        
+        <!-- Завантажуємо 3D-модель у кеш -->
+        <a-assets>
+            <a-asset-item id="paddingtonModel" src="./paddington.glb"></a-asset-item>
+        </a-assets>
+
+        <!-- Налаштування камери -->
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <!-- Сутність, що з'являється при розпізнаванні твого маркера -->
+        <a-entity mindar-image-target="targetIndex: 0">
+            <!-- Сама модель із примусовим запуском будь-якої анімації (clip: *) -->
+            <a-gltf-model 
+                src="#paddingtonModel" 
+                position="0 -0.1 0" 
+                rotation="0 0 0" 
+                scale="0.48 0.48 0.48"
+                animation-mixer="clip: *;">
+            </a-gltf-model>
+        </a-entity>
+
     </a-scene>
-  </body>
+
+</body>
 </html>
