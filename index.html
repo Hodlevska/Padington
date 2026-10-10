@@ -18,9 +18,9 @@
 </head>
 <body>
 
-    <!-- AR Сцена з прив'язкою до твого файлу targets.mind -->
+    <!-- AR Сцена з фільтрами згладжування (filterMinCF та filterBeta), щоб модель не тряслась -->
     <a-scene 
-        mindar-image="imageTargetSrc: ./targets.mind;" 
+        mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.0001; filterBeta: 0.001;" 
         color-space="sRGB" 
         renderer="colorManagement: true, physicallyCorrectLights: true" 
         vr-mode-ui="enabled: false" 
@@ -36,7 +36,7 @@
 
         <!-- Сутність, що з'являється при розпізнаванні твого маркера -->
         <a-entity mindar-image-target="targetIndex: 0">
-            <!-- Сама модель із примусовим запуском будь-якої анімації (clip: *) -->
+            <!-- Сама модель із примусовим запуском анімації та твоїм масштабом -->
             <a-gltf-model 
                 src="#paddingtonModel" 
                 position="0 -0.1 0" 
