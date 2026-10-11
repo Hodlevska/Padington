@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Paddington Stable Animation</title>
+    <title>AR Paddington Toggle Models</title>
     
     <!-- Підключаємо A-Frame та MindAR -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <!-- Додаємо офіційний плагін анімації для glTF -->
+    <!-- Плагін анімації -->
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
     <style>
@@ -20,7 +20,7 @@
 </head>
 <body>
 
-    <!-- AR Сцена з чистим швидким трекінгом -->
+    <!-- AR Сцена -->
     <a-scene 
         mindar-image="imageTargetSrc: ./targets.mind;" 
         color-space="sRGB" 
@@ -28,28 +28,74 @@
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: true">
         
-        <!-- Завантажуємо 3D-модель у кеш -->
         <a-assets>
-            <a-asset-item id="paddingtonModel" src="./animatedbear.glb"></a-asset-item>
+            <a-asset-item id="modelPaddington" src="./paddington.glb"></a-asset-item>
+            <a-asset-item id="modelDance" src="./dance.glb"></a-asset-item>
+            <a-asset-item id="modelWaves" src="./waves_hand.glb"></a-asset-item>
         </a-assets>
 
-        <!-- Налаштування камери -->
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- Сутність маркера зі згладжуванням (smooth), що прибирає дрижання моделі -->
+        <!-- Сутність маркера -->
         <a-entity mindar-image-target="targetIndex: 0" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="5">
-            <!-- Сама модель Падінгтона з анімацією -->
+            
+            <!-- Модель 1: Paddington -->
             <a-gltf-model 
-                src="#paddingtonModel" 
+                id="pad1"
+                src="#modelPaddington" 
+                position="0 -0.1 0" 
+                rotation="0 0 0" 
+                scale="0.49 0.49 0.49"
+                animation-mixer="clip: *; loop: repeat;"
+                visible="true"
+                shadow="cast: false; receive: false">
+            </a-gltf-model>
+
+            <!-- Модель 2: Dance (виставили таку ж позицію, щоб не падала вниз) -->
+            <a-gltf-model 
+                id="pad2"
+                src="#modelDance" 
+                position="0 -0.50" 
+                rotation="0 0 0" 
+                scale="0.49 0.49 0.49"
+                animation-mixer="clip: *; loop: repeat;"
+                visible="false"
+                shadow="cast: false; receive: false">
+            </a-gltf-model>
+
+            <!-- Модель 3: Waves (теж виставили нормальну позицію) -->
+            <a-gltf-model 
+                id="pad3"
+                src="#modelWaves" 
                 position="0 -0.5 0" 
                 rotation="0 0 0" 
                 scale="0.49 0.49 0.49"
-                animation-mixer
+                animation-mixer="clip: *; loop: repeat;"
+                visible="false"
                 shadow="cast: false; receive: false">
             </a-gltf-model>
+
         </a-entity>
 
     </a-scene>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const models = [
+                document.querySelector("#pad1"),
+                document.querySelector("#pad2"),
+                document.querySelector("#pad3")
+            ];
+            let currentIndex = 0;
+
+            window.addEventListener("click", () => {
+                models[currentIndex].setAttribute("visible", "false");
+                currentIndex = (currentIndex + 1) % models.length;
+                models[currentIndex].setAttribute("visible", "true");
+                console.log("Переключено на модель номер:", currentIndex + 1);
+            });
+        });
+    </script>
 
 </body>
 </html>
