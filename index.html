@@ -16,12 +16,54 @@
             margin: 0;
             overflow: hidden;
         }
+        /* Екран-заставка на весь екран */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 1);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        #splash-screen img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #splash-screen h2 {
+            color: white;
+            font-family: sans-serif;
+            font-size: 24px;
+            text-align: center;
+            padding: 15px 20px;
+            z-index: 2;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            margin: 0 20px;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Заставка для розблокування звуку та запуску AR -->
+    <div id="splash-screen">
+        <img src="./backgraund.jpg" alt="Start AR" onerror="this.src='https://via.placeholder.com/250/ff4757/ffffff?text=AR+Paddington'">
+        <h2>Тисни сюди, щоб запустити AR та музику!</h2>
+    </div>
+
     <!-- AR Сцена -->
     <a-scene 
+        id="arScene"
         mindar-image="imageTargetSrc: ./targets.mind;" 
         color-space="sRGB" 
         renderer="colorManagement: true, precision: mediump, antialias: true" 
@@ -29,17 +71,25 @@
         device-orientation-permission-ui="enabled: true">
         
         <a-assets>
+            <!-- 3D Моделі -->
             <a-asset-item id="modelPaddington" src="./paddington.glb"></a-asset-item>
             <a-asset-item id="modelDance" src="./dance.glb"></a-asset-item>
             <a-asset-item id="modelWaves" src="./waves_hand.glb"></a-asset-item>
+            <a-asset-item id="modelSecondDance" src="./second_dance.glb"></a-asset-item>
+
+            <!-- Аудіофайли з циклом -->
+            <audio id="audio1" src="./music1.mp3" preload="auto" loop></audio>
+            <audio id="audio3" src="./music3.mp3" preload="auto" loop></audio>
+            <audio id="audio2" src="./music2.mp3" preload="auto" loop></audio>
+            <audio id="audio4" src="./music4.mp3" preload="auto"></audio>
         </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- Сутність маркера -->
-        <a-entity mindar-image-target="targetIndex: 0" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="5">
+        <!-- Сутність маркера з подіями появи/зникнення -->
+        <a-entity id="markerEntity" mindar-image-target="targetIndex: 0" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="5">
             
-            <!-- Модель 1: Paddington -->
+            <!-- Модель 1: Paddington (music1.mp3) -->
             <a-gltf-model 
                 id="pad1"
                 src="#modelPaddington" 
@@ -51,11 +101,11 @@
                 shadow="cast: false; receive: false">
             </a-gltf-model>
 
-            <!-- Модель 2: Dance (виставили таку ж позицію, щоб не падала вниз) -->
+            <!-- Модель 2: Waves (music3.mp3) -->
             <a-gltf-model 
-                id="pad2"
-                src="#modelDance" 
-                position="0 -0.50" 
+                id="pad3"
+                src="#modelWaves" 
+                position="0 -0.5 0" 
                 rotation="0 0 0" 
                 scale="0.49 0.49 0.49"
                 animation-mixer="clip: *; loop: repeat;"
@@ -63,10 +113,22 @@
                 shadow="cast: false; receive: false">
             </a-gltf-model>
 
-            <!-- Модель 3: Waves (теж виставили нормальну позицію) -->
+            <!-- Модель 3: Dance (music2.mp3) -->
             <a-gltf-model 
-                id="pad3"
-                src="#modelWaves" 
+                id="pad2"
+                src="#modelDance" 
+                position="0 -0.5 0" 
+                rotation="0 0 0" 
+                scale="0.49 0.49 0.49"
+                animation-mixer="clip: *; loop: repeat;"
+                visible="false"
+                shadow="cast: false; receive: false">
+            </a-gltf-model>
+
+            <!-- Модель 4: Second Dance (music4.mp3) -->
+            <a-gltf-model 
+                id="pad4"
+                src="#modelSecondDance" 
                 position="0 -0.5 0" 
                 rotation="0 0 0" 
                 scale="0.49 0.49 0.49"
@@ -81,18 +143,83 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            const splashScreen = document.querySelector("#splash-screen");
+            const markerEntity = document.querySelector("#markerEntity");
+
             const models = [
                 document.querySelector("#pad1"),
+                document.querySelector("#pad3"),
                 document.querySelector("#pad2"),
-                document.querySelector("#pad3")
+                document.querySelector("#pad4")
             ];
-            let currentIndex = 0;
 
-            window.addEventListener("click", () => {
+            const audios = [
+                document.querySelector("#audio1"),
+                document.querySelector("#audio3"),
+                document.querySelector("#audio2"),
+                document.querySelector("#audio4")
+            ];
+
+            let currentIndex = 0;
+            let isTargetVisible = false;
+            let audioInitialized = false;
+
+            const playCurrentAudio = () => {
+                if (!audioInitialized) return;
+                audios.forEach((audio, i) => {
+                    if (i === currentIndex) {
+                        if (isTargetVisible) {
+                            audio.play().catch(e => console.log("Play error:", e));
+                        }
+                    } else {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }
+                });
+            };
+
+            const stopAllAudio = () => {
+                audios.forEach(audio => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                });
+            };
+
+            splashScreen.addEventListener("click", () => {
+                splashScreen.style.display = "none";
+                audioInitialized = true;
+
+                audios[0].play().then(() => {
+                    audios[0].pause();
+                    audios[0].currentTime = 0;
+                    if (isTargetVisible) {
+                        playCurrentAudio();
+                    }
+                }).catch(err => console.log("Audio unlock failed:", err));
+            });
+
+            markerEntity.addEventListener("targetFound", () => {
+                isTargetVisible = true;
+                if (audioInitialized) {
+                    playCurrentAudio();
+                }
+            });
+
+            markerEntity.addEventListener("targetLost", () => {
+                isTargetVisible = false;
+                stopAllAudio();
+            });
+
+            window.addEventListener("click", (e) => {
+                if (e.target.closest("#splash-screen")) return;
+                if (!audioInitialized) return;
+
                 models[currentIndex].setAttribute("visible", "false");
                 currentIndex = (currentIndex + 1) % models.length;
                 models[currentIndex].setAttribute("visible", "true");
-                console.log("Переключено на модель номер:", currentIndex + 1);
+                
+                playCurrentAudio();
+                console.log("Переключено на модель та аудіо номер:", currentIndex + 1);
             });
         });
     </script>
