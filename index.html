@@ -2,245 +2,341 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AR Paddington Toggle Models</title>
-    
-    <!-- Підключаємо A-Frame та MindAR -->
+
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <!-- Плагін анімації -->
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-    
+
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-        /* Екран-заставка на весь екран */
+        html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+
         #splash-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 1);
+            inset: 0;
+            background: #000;
             z-index: 9999;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
         }
         #splash-screen img {
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
             position: absolute;
-            top: 0;
-            left: 0;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             z-index: 1;
         }
         #splash-screen h2 {
-            color: white;
-            font-family: sans-serif;
-            font-size: 24px;
-            text-align: center;
-            padding: 15px 20px;
+            position: relative;
             z-index: 2;
+            margin: 0 20px;
+            padding: 15px 20px;
+            color: #fff;
+            font: 24px sans-serif;
+            text-align: center;
             background: rgba(0, 0, 0, 0.6);
             border-radius: 12px;
-            margin: 0 20px;
         }
+
+        /* Статус внизу екрана (видно навіть поверх заставки) */
+        #status {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            transform: translateX(-50%);
+            z-index: 10000;
+            max-width: 90vw;
+            padding: 10px 18px;
+            color: #fff;
+            font: 15px sans-serif;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 22px;
+            display: none;
+            pointer-events: none;
+        }
+        #status.show { display: flex; align-items: center; gap: 10px; }
+        #status .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex: none;
+        }
+        #status.no-spinner .spinner { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <!-- Заставка для розблокування звуку та запуску AR -->
     <div id="splash-screen">
-        <img src="./backgraund.jpg" alt="Start AR" onerror="this.src='https://via.placeholder.com/250/ff4757/ffffff?text=AR+Paddington'">
+        <img src="./backgraund.jpg" alt="Start AR"
+             onerror="this.onerror=null; this.src='https://via.placeholder.com/250/ff4757/ffffff?text=AR+Paddington'">
         <h2>Тисни сюди, щоб запустити AR та музику!</h2>
     </div>
 
-    <!-- AR Сцена -->
-    <a-scene 
-        id="arScene"
-        mindar-image="imageTargetSrc: ./targets.mind;" 
-        color-space="sRGB" 
-        renderer="colorManagement: true, precision: mediump, antialias: true" 
-        vr-mode-ui="enabled: false" 
-        device-orientation-permission-ui="enabled: true">
-        
-        <a-assets>
-            <!-- 3D Моделі: Paddington + Waves + 10 танців -->
-            <a-asset-item id="modelPaddington" src="./paddington.glb"></a-asset-item>
-            <a-asset-item id="modelWaves" src="./waves_hand.glb"></a-asset-item>
-            <a-asset-item id="modelDance1" src="./dance_1.glb"></a-asset-item>
-            <a-asset-item id="modelDance2" src="./dance_2.glb"></a-asset-item>
-            <a-asset-item id="modelDance3" src="./dance_3.glb"></a-asset-item>
-            <a-asset-item id="modelDance4" src="./dance_4.glb"></a-asset-item>
-            <a-asset-item id="modelDance5" src="./dance_5.glb"></a-asset-item>
-            <a-asset-item id="modelDance6" src="./dance_6.glb"></a-asset-item>
-            <a-asset-item id="modelDance7" src="./dance_7.glb"></a-asset-item>
-            <a-asset-item id="modelDance8" src="./dance_8.glb"></a-asset-item>
-            <a-asset-item id="modelDance9" src="./dance_9.glb"></a-asset-item>
-            <a-asset-item id="modelDance10" src="./dance_10.glb"></a-asset-item>
+    <div id="status"><span class="spinner"></span><span id="status-text"></span></div>
 
-            <!-- Аудіофайли від 1 до 12 для кожної моделі -->
-            <audio id="audio1" src="./music1.mp3" preload="auto" loop></audio>
-            <audio id="audio2" src="./music2.mp3" preload="auto" loop></audio>
-            <audio id="audio3" src="./music3.mp3" preload="auto" loop></audio>
-            <audio id="audio4" src="./music4.mp3" preload="auto" loop></audio>
-            <audio id="audio5" src="./music5.mp3" preload="auto" loop></audio>
-            <audio id="audio6" src="./music6.mp3" preload="auto" loop></audio>
-            <audio id="audio7" src="./music7.mp3" preload="auto" loop></audio>
-            <audio id="audio8" src="./music8.mp3" preload="auto" loop></audio>
-            <audio id="audio9" src="./music9.mp3" preload="auto" loop></audio>
-            <audio id="audio10" src="./music10.mp3" preload="auto" loop></audio>
-            <audio id="audio11" src="./music11.mp3" preload="auto" loop></audio>
-            <audio id="audio12" src="./music12.mp3" preload="auto" loop></audio>
-        </a-assets>
+    <!--
+        Налаштування проти тремтіння (рівень 1 — фільтр MindAR):
+          filterMinCF — менше = менше тремтіння (більше запізнення)
+          filterBeta  — менше = плавніше при русі (більше запізнення)
+        Рівень 2 — pose-smoother на #stabilizer (параметр factor, 0.05–1):
+          менше = плавніше, але модель повільніше наздоганяє маркер.
+    -->
+    <a-scene
+        id="arScene"
+        mindar-image="imageTargetSrc: ./targets.mind;
+                      filterMinCF: 0.00005;
+                      filterBeta: 5;
+                      missTolerance: 10;
+                      warmupTolerance: 5;
+                      maxTrack: 1;"
+        color-space="sRGB"
+        renderer="colorManagement: true; precision: mediump; antialias: true"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: true">
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- Сутність маркера з подіями появи/зникнення -->
-        <a-entity id="markerEntity" mindar-image-target="targetIndex: 0" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="5">
-            
-            <!-- 0. Paddington (music1.mp3) -->
-            <a-gltf-model id="pad0" src="#modelPaddington" position="0 -0.1 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="true" shadow="cast: false; receive: false"></a-gltf-model>
-            
-            <!-- 1. Waves Hand (music2.mp3) -->
-            <a-gltf-model id="pad1" src="#modelWaves" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
+        <!-- Маркер: тільки відстежує позицію, моделей не містить -->
+        <a-entity id="markerEntity" mindar-image-target="targetIndex: 0"></a-entity>
 
-            <!-- 2. Dance 1 (music3.mp3) -->
-            <a-gltf-model id="pad2" src="#modelDance1" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-            <!-- 3. Dance 2 (music4.mp3) -->
-            <a-gltf-model id="pad3" src="#modelDance2" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-            <!-- 4. Dance 3 (music5.mp3) -->
-            <a-gltf-model id="pad4" src="#modelDance3" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-            <!-- 5. Dance 4 (music6.mp3) -->
-            <a-gltf-model id="pad5" src="#modelDance4" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-            <!-- 6. Dance 5 (music7.mp3) -->
-            <a-gltf-model id="pad6" src="#modelDance5" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-            <!-- 7. Dance 6 (music8.mp3) -->
-            <a-gltf-model id="pad7" src="#modelDance6" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-            <!-- 8. Dance 7 (music9.mp3) -->
-            <a-gltf-model id="pad8" src="#modelDance7" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-            <!-- 9. Dance 8 (music10.mp3) -->
-            <a-gltf-model id="pad9" src="#modelDance8" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-            <!-- 10. Dance 9 (music11.mp3) -->
-            <a-gltf-model id="pad10" src="#modelDance9" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-            <!-- 11. Dance 10 (music12.mp3) -->
-            <a-gltf-model id="pad11" src="#modelDance10" position="0 -0.5 0" rotation="0 0 0" scale="0.49 0.49 0.49" animation-mixer="clip: *; loop: repeat;" visible="false" shadow="cast: false; receive: false"></a-gltf-model>
-
-        </a-entity>
-
+        <!-- Сюди додаються моделі; позиція згладжується відносно маркера -->
+        <a-entity id="stabilizer" pose-smoother="target: #markerEntity; factor: 0.15"></a-entity>
     </a-scene>
 
+    <audio id="player" loop preload="auto" playsinline></audio>
+
     <script>
+        // ===== Додаткове згладжування позиції/повороту/масштабу моделі =====
+        AFRAME.registerComponent("pose-smoother", {
+            schema: {
+                target: { type: "selector" },
+                factor: { type: "number", default: 0.15 }
+            },
+            init() {
+                this.p = new THREE.Vector3();
+                this.q = new THREE.Quaternion();
+                this.s = new THREE.Vector3();
+                this.hasPose = false;
+                this.el.object3D.visible = false;
+            },
+            tick(time, dt) {
+                const target = this.data.target && this.data.target.object3D;
+                const obj = this.el.object3D;
+                if (!target) return;
+
+                if (!target.visible) {
+                    // Маркер втрачено — ховаємо модель і скидаємо позу
+                    obj.visible = false;
+                    this.hasPose = false;
+                    return;
+                }
+
+                target.updateMatrixWorld(true);
+                target.matrixWorld.decompose(this.p, this.q, this.s);
+
+                if (!this.hasPose) {
+                    // Перша поза після появи маркера — без плавного "прольоту"
+                    obj.position.copy(this.p);
+                    obj.quaternion.copy(this.q);
+                    obj.scale.copy(this.s);
+                    this.hasPose = true;
+                } else {
+                    // Незалежно від FPS
+                    const alpha = 1 - Math.pow(1 - this.data.factor, (dt || 16.7) / 16.7);
+                    obj.position.lerp(this.p, alpha);
+                    obj.quaternion.slerp(this.q, alpha);
+                    obj.scale.lerp(this.s, alpha);
+                }
+                obj.visible = true;
+            }
+        });
+
         document.addEventListener("DOMContentLoaded", () => {
+            // ===== Конфігурація: модель + музика + висота по осі Y =====
+            const SCALE = "0.49 0.49 0.49";
+            const ITEMS = [
+                { model: "./paddington.glb", audio: "./music1.mp3",  y: -0.1 },
+                { model: "./waves_hand.glb", audio: "./music2.mp3",  y: -0.5 },
+                { model: "./dance_1.glb",    audio: "./music3.mp3",  y: -0.5 },
+                { model: "./dance_2.glb",    audio: "./music4.mp3",  y: -0.5 },
+                { model: "./dance_3.glb",    audio: "./music5.mp3",  y: -0.5 },
+                { model: "./dance_4.glb",    audio: "./music6.mp3",  y: -0.5 },
+                { model: "./dance_5.glb",    audio: "./music7.mp3",  y: -0.5 },
+                { model: "./dance_6.glb",    audio: "./music8.mp3",  y: -0.5 },
+                { model: "./dance_7.glb",    audio: "./music9.mp3",  y: -0.5 },
+                { model: "./dance_8.glb",    audio: "./music10.mp3", y: -0.5 },
+                { model: "./dance_9.glb",    audio: "./music11.mp3", y: -0.5 },
+                { model: "./dance_10.glb",   audio: "./music12.mp3", y: -0.5 }
+            ];
+
+            const scene = document.querySelector("#arScene");
             const splashScreen = document.querySelector("#splash-screen");
             const markerEntity = document.querySelector("#markerEntity");
-
-            const models = [
-                document.querySelector("#pad0"),
-                document.querySelector("#pad1"),
-                document.querySelector("#pad2"),
-                document.querySelector("#pad3"),
-                document.querySelector("#pad4"),
-                document.querySelector("#pad5"),
-                document.querySelector("#pad6"),
-                document.querySelector("#pad7"),
-                document.querySelector("#pad8"),
-                document.querySelector("#pad9"),
-                document.querySelector("#pad10"),
-                document.querySelector("#pad11")
-            ];
-
-            const audios = [
-                document.querySelector("#audio1"),
-                document.querySelector("#audio2"),
-                document.querySelector("#audio3"),
-                document.querySelector("#audio4"),
-                document.querySelector("#audio5"),
-                document.querySelector("#audio6"),
-                document.querySelector("#audio7"),
-                document.querySelector("#audio8"),
-                document.querySelector("#audio9"),
-                document.querySelector("#audio10"),
-                document.querySelector("#audio11"),
-                document.querySelector("#audio12")
-            ];
+            const stabilizer = document.querySelector("#stabilizer");
+            const player = document.querySelector("#player");
+            const statusBox = document.querySelector("#status");
+            const statusText = document.querySelector("#status-text");
 
             let currentIndex = 0;
+            let currentModelEl = null;
             let isTargetVisible = false;
-            let audioInitialized = false;
+            let started = false;
+            let arReady = false;
+            let modelLoading = false;
+            let errorText = "";
+
+            // ===== Статус внизу екрана =====
+            const updateStatus = () => {
+                let text = "";
+                let spinner = true;
+
+                if (errorText) {
+                    text = errorText;
+                    spinner = false;
+                } else if (!arReady) {
+                    text = "Завантаження AR…";
+                } else if (modelLoading) {
+                    text = "Завантаження моделі…";
+                } else if (!isTargetVisible) {
+                    text = "Наведіть камеру на маркер";
+                    spinner = false;
+                }
+
+                if (!text) {
+                    statusBox.classList.remove("show");
+                    return;
+                }
+                statusText.textContent = text;
+                statusBox.classList.toggle("no-spinner", !spinner);
+                statusBox.classList.add("show");
+            };
+
+            const flashError = (text) => {
+                errorText = text;
+                updateStatus();
+                setTimeout(() => { errorText = ""; updateStatus(); }, 3000);
+            };
+
+            scene.addEventListener("arReady", () => { arReady = true; updateStatus(); });
+            scene.addEventListener("arError", () => flashError("Не вдалося запустити камеру/AR"));
+
+            // ===== Моделі =====
+            const disposeEntity = (el) => {
+                el.object3D.traverse((node) => {
+                    if (node.geometry) node.geometry.dispose();
+                    if (node.material) {
+                        (Array.isArray(node.material) ? node.material : [node.material]).forEach((m) => {
+                            Object.values(m).forEach((v) => v && v.isTexture && v.dispose());
+                            m.dispose();
+                        });
+                    }
+                });
+            };
+
+            const showModel = (index) => {
+                if (currentModelEl) {
+                    disposeEntity(currentModelEl);
+                    currentModelEl.remove();
+                }
+
+                const item = ITEMS[index];
+                const el = document.createElement("a-gltf-model");
+                el.setAttribute("src", item.model);
+                el.setAttribute("position", `0 ${item.y} 0`);
+                el.setAttribute("scale", SCALE);
+                el.setAttribute("animation-mixer", "clip: *; loop: repeat");
+                el.setAttribute("shadow", "cast: false; receive: false");
+
+                modelLoading = true;
+                updateStatus();
+
+                el.addEventListener("model-loaded", () => {
+                    if (el !== currentModelEl) return;
+                    modelLoading = false;
+                    updateStatus();
+                });
+                el.addEventListener("model-error", () => {
+                    if (el !== currentModelEl) return;
+                    modelLoading = false;
+                    flashError("Не вдалося завантажити модель");
+                });
+
+                stabilizer.appendChild(el);
+                currentModelEl = el;
+
+                // Підвантажуємо наступну модель наперед
+                fetch(ITEMS[(index + 1) % ITEMS.length].model).catch(() => {});
+            };
+
+            // ===== Звук =====
+            const setTrack = (index) => {
+                player.src = ITEMS[index].audio;
+                player.currentTime = 0;
+            };
 
             const playCurrentAudio = () => {
-                if (!audioInitialized) return;
-                audios.forEach((audio, i) => {
-                    if (i === currentIndex) {
-                        if (isTargetVisible) {
-                            audio.play().catch(e => console.log("Play error:", e));
-                        }
-                    } else {
-                        audio.pause();
-                        audio.currentTime = 0;
-                    }
-                });
+                if (!started || !isTargetVisible) return;
+                player.play().catch((e) => console.log("Play error:", e));
             };
 
-            const stopAllAudio = () => {
-                audios.forEach(audio => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                });
+            const stopAudio = () => {
+                player.pause();
+                player.currentTime = 0;
             };
 
-            splashScreen.addEventListener("click", () => {
+            // ===== Старт (клік по заставці розблоковує звук) =====
+            splashScreen.addEventListener("click", (e) => {
+                e.stopPropagation();
                 splashScreen.style.display = "none";
-                audioInitialized = true;
+                started = true;
 
-                audios[0].play().then(() => {
-                    audios[0].pause();
-                    audios[0].currentTime = 0;
-                    if (isTargetVisible) {
-                        playCurrentAudio();
-                    }
-                }).catch(err => console.log("Audio unlock failed:", err));
+                setTrack(currentIndex);
+                player.play()
+                    .then(() => { if (!isTargetVisible) stopAudio(); })
+                    .catch((err) => console.log("Audio unlock failed:", err));
             });
 
+            // ===== Події маркера =====
             markerEntity.addEventListener("targetFound", () => {
                 isTargetVisible = true;
-                if (audioInitialized) {
-                    playCurrentAudio();
-                }
+                updateStatus();
+                playCurrentAudio();
             });
 
             markerEntity.addEventListener("targetLost", () => {
                 isTargetVisible = false;
-                stopAllAudio();
+                updateStatus();
+                stopAudio();
             });
 
-            window.addEventListener("click", (e) => {
-                if (e.target.closest("#splash-screen")) return;
-                if (!audioInitialized) return;
+            // ===== Перемикання модель + музика по тапу =====
+            window.addEventListener("click", () => {
+                if (!started) return;
 
-                models[currentIndex].setAttribute("visible", "false");
-                currentIndex = (currentIndex + 1) % models.length;
-                models[currentIndex].setAttribute("visible", "true");
-                
+                currentIndex = (currentIndex + 1) % ITEMS.length;
+                showModel(currentIndex);
+                setTrack(currentIndex);
                 playCurrentAudio();
-                console.log("Переключено на модель та аудіо індекс:", currentIndex);
+                console.log("Переключено на індекс:", currentIndex);
             });
+
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) player.pause();
+                else playCurrentAudio();
+            });
+
+            // Початковий стан і перша модель
+            updateStatus();
+            showModel(currentIndex);
         });
     </script>
 
