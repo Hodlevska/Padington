@@ -174,7 +174,7 @@
             const SCALE = "0.50 0.50 0.50";   // розмір (менше = менший ведмідь)
             const OFFSET_X = 0;          // вправо (мінус = вліво)
             const OFFSET_Z = 0;            // до камери (плюс) / від камери (мінус)
-
+            const ROTATION = "80 0 0";   // X Y Z у градусах (приклад: нахил на 20° вперед)
             const ITEMS = [
                 { model: "./paddington.glb", audio: "./music1.mp3",  y: -0.1 },
                 { model: "./waves_hand.glb", audio: "./music2.mp3",  y: -0.5 },
@@ -251,7 +251,7 @@
                 el.setAttribute("src", item.model);
                 el.setAttribute("position", `${OFFSET_X} ${item.y} ${OFFSET_Z}`);
                 el.setAttribute("scale", SCALE);
-                el.setAttribute("rotation", "0 0 0");
+                el.setAttribute("rotation", "-10 0 0");
                 // Невидимі моделі стоять на паузі (timeScale: 0) — економить ресурси
                 el.setAttribute("animation-mixer", `clip: *; loop: repeat; timeScale: ${i === currentIndex ? 1 : 0}`);
                 el.setAttribute("shadow", "cast: false; receive: false");
