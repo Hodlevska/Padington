@@ -10,7 +10,16 @@
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
 
     <style>
-        html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+        /* ВАЖЛИВО: жодного фону на html/body — інакше він закриває відео з камери */
+        html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+        }
+        a-scene, .a-canvas {
+            background: transparent !important;
+        }
 
         #splash-screen {
             position: fixed;
@@ -99,7 +108,7 @@
                       warmupTolerance: 5;
                       maxTrack: 1;"
         color-space="sRGB"
-        renderer="colorManagement: true; precision: mediump; antialias: true"
+        renderer="colorManagement: true; precision: mediump; antialias: true; alpha: true"
         vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: true">
 
@@ -162,7 +171,10 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             // ===== Конфігурація: модель + музика + висота по осі Y =====
-            const SCALE = "0.49 0.49 0.49";
+            const SCALE = "0.50 0.50 0.50";   // розмір (менше = менший ведмідь)
+            const OFFSET_X = 0;          // вправо (мінус = вліво)
+            const OFFSET_Z = 0;            // до камери (плюс) / від камери (мінус)
+
             const ITEMS = [
                 { model: "./paddington.glb", audio: "./music1.mp3",  y: -0.1 },
                 { model: "./waves_hand.glb", audio: "./music2.mp3",  y: -0.5 },
@@ -187,12 +199,13 @@
             const statusText = document.querySelector("#status-text");
 
             let currentIndex = 0;
-            let currentModelEl = null;
             let isTargetVisible = false;
             let started = false;
             let arReady = false;
-            let modelLoading = false;
+            let loadedCount = 0;      // скільки моделей уже завершили завантаження (успішно або з помилкою)
             let errorText = "";
+
+            const models = [];        // { el, loaded }
 
             // ===== Статус внизу екрана =====
             const updateStatus = () => {
@@ -204,8 +217,8 @@
                     spinner = false;
                 } else if (!arReady) {
                     text = "Завантаження AR…";
-                } else if (modelLoading) {
-                    text = "Завантаження моделі…";
+                } else if (loadedCount < ITEMS.length) {
+                    text = `Завантаження моделей: ${loadedCount}/${ITEMS.length}`;
                 } else if (!isTargetVisible) {
                     text = "Наведіть камеру на маркер";
                     spinner = false;
@@ -229,52 +242,48 @@
             scene.addEventListener("arReady", () => { arReady = true; updateStatus(); });
             scene.addEventListener("arError", () => flashError("Не вдалося запустити камеру/AR"));
 
-            // ===== Моделі =====
-            const disposeEntity = (el) => {
-                el.object3D.traverse((node) => {
-                    if (node.geometry) node.geometry.dispose();
-                    if (node.material) {
-                        (Array.isArray(node.material) ? node.material : [node.material]).forEach((m) => {
-                            Object.values(m).forEach((v) => v && v.isTexture && v.dispose());
-                            m.dispose();
-                        });
-                    }
-                });
-            };
+            // ===== Моделі: створюються один раз, вантажаться по черзі =====
+            const loadModel = (i) => {
+                if (i >= ITEMS.length) return;
 
-            const showModel = (index) => {
-                if (currentModelEl) {
-                    disposeEntity(currentModelEl);
-                    currentModelEl.remove();
-                }
-
-                const item = ITEMS[index];
+                const item = ITEMS[i];
                 const el = document.createElement("a-gltf-model");
                 el.setAttribute("src", item.model);
-                el.setAttribute("position", `0 ${item.y} 0`);
+                el.setAttribute("position", `${OFFSET_X} ${item.y} ${OFFSET_Z}`);
                 el.setAttribute("scale", SCALE);
-                el.setAttribute("animation-mixer", "clip: *; loop: repeat");
+                el.setAttribute("rotation", "0 0 0");
+                // Невидимі моделі стоять на паузі (timeScale: 0) — економить ресурси
+                el.setAttribute("animation-mixer", `clip: *; loop: repeat; timeScale: ${i === currentIndex ? 1 : 0}`);
                 el.setAttribute("shadow", "cast: false; receive: false");
+                el.setAttribute("visible", i === currentIndex ? "true" : "false");
 
-                modelLoading = true;
-                updateStatus();
+                const entry = { el, done: false };
+                models[i] = entry;
 
-                el.addEventListener("model-loaded", () => {
-                    if (el !== currentModelEl) return;
-                    modelLoading = false;
+                const finish = () => {
+                    if (entry.done) return;
+                    entry.done = true;
+                    loadedCount++;
                     updateStatus();
-                });
+                    loadModel(i + 1);   // вантажимо наступну
+                };
+
+                el.addEventListener("model-loaded", finish);
                 el.addEventListener("model-error", () => {
-                    if (el !== currentModelEl) return;
-                    modelLoading = false;
-                    flashError("Не вдалося завантажити модель");
+                    flashError(`Не вдалося завантажити модель ${i + 1}`);
+                    finish();
                 });
 
                 stabilizer.appendChild(el);
-                currentModelEl = el;
+            };
 
-                // Підвантажуємо наступну модель наперед
-                fetch(ITEMS[(index + 1) % ITEMS.length].model).catch(() => {});
+            const showModel = (index) => {
+                models.forEach((m, i) => {
+                    if (!m) return;
+                    const on = i === index;
+                    m.el.setAttribute("visible", on ? "true" : "false");
+                    m.el.setAttribute("animation-mixer", "timeScale", on ? 1 : 0);
+                });
             };
 
             // ===== Звук =====
@@ -334,9 +343,9 @@
                 else playCurrentAudio();
             });
 
-            // Початковий стан і перша модель
+            // Старт: показуємо статус і починаємо завантаження з першої моделі
             updateStatus();
-            showModel(currentIndex);
+            loadModel(0);
         });
     </script>
 
